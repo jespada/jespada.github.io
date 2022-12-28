@@ -1,0 +1,14 @@
+{
+  "status":"OK",
+  "tag":"payRequest",
+  "commentAllowed":255,
+  "callback":"https://getalby.com/lnurlp/jespada/callback",
+  "metadata":"[[\"text/identifier\", \"jespada@getalby.com\"], [\"text/plain\", \"Sats for jespada\"]]",
+  "minSendable":1000,"maxSendable":11000000000,
+  "payerData":
+    {
+      "name":{"mandatory":false},
+      "email":{"mandatory":false}
+    }
+}
+  
