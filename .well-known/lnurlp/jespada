@@ -4,7 +4,7 @@
   "commentAllowed": 255,
   "callback": "https://getalby.com/lnurlp/jespada/callback",
   "metadata": "[[\"text/identifier\", \"jespada@getalby.com\"], [\"text/plain\", \"Sats for Jorge\"]]",
-  "minSendable": 1,
+  "minSendable": 1000,
   "maxSendable": 11000000000,
   "payerData": {
     "name": {
