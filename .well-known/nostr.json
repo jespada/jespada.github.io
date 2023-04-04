@@ -5,6 +5,6 @@
 
   },
     "relays": {
-        "f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9": ["wss://relay.damus.io", "wss://brb.io", "wss://nos.lol", "wss://relay.snort.social", "wss://nostr.zebedee.cloud", "wss://nostr.wine", "wss://eden.nostr.land", "wss://nostr.milou.lol", "wss://puravida.nostr.land", "wss://atlas.nostr.land", "wss://filter.nostr.wine/f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9?broadcast=true"]
+        "f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9": ["wss://relay.damus.io", "wss://purplepag.es", "wss://nos.lol", "wss://relay.snort.social", "wss://nostr.zebedee.cloud", "wss://nostr.wine", "wss://eden.nostr.land", "wss://nostr.milou.lol", "wss://puravida.nostr.land", "wss://atlas.nostr.land", "wss://filter.nostr.wine/f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9?broadcast=true"]
     }
 }
