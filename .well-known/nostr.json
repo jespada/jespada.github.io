@@ -5,14 +5,14 @@
     },
     "relays": {
         "f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9": [
+            "wss://relay.primal.net",
             "wss://relay.snort.social",
             "wss://relay.damus.io",
             "wss://nostr.wine",
             "wss://nos.lol",
             "wss://purplepag.es",
-            "wss://atlas.nostr.land",
+            "wss://nostr.land",
             "wss://filter.nostr.wine/f57d8cf57ba293a764cd30f3461ce21b0a3849c5c03533391a1074412602f7c9?broadcast=true",
-            "wss://eden.nostr.land",
             "ws://hvip2ofosdx4d4nbc37si2pzshzvfhdak27kj7fp3fuoiic5m7wfcyyd.onion"
         ]
     }
