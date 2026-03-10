@@ -746,7 +746,8 @@
     <div class="card">
       <h4>Seccomp & Network</h4>
       <ul style="font-size:0.9em">
-        <li><code>SystemCallFilter = @system-service ~@mount ~@reboot ~@debug ~@raw-io</code></li>
+        <li><code>SystemCallFilter = @system-service ~@mount ~@reboot ~@debug ~@raw-io + pkey_alloc/free/mprotect</code></li>
+        <li><code>ProcSubset = all</code> (Chromium needs <code>/proc/sys/fs/inotify</code>; <code>ProtectKernelTunables</code> keeps it read-only)</li>
         <li><code>RestrictAddressFamilies = AF_INET AF_INET6 AF_UNIX AF_NETLINK</code></li>
         <li><code>SystemCallArchitectures = native</code></li>
       </ul>
@@ -777,13 +778,13 @@
     <div class="card" style="margin-bottom: 2px; border-radius: 12px 12px 0 0;">
       <div class="layer-header">
         <span class="layer-num">1</span>
-        <div><strong>tools.deny</strong> &mdash; Block built-in <code>web_fetch</code>, <code>web_search</code>, <code>browser</code></div>
+        <div><strong>tools.deny</strong> &mdash; Block built-in <code>web_fetch</code>, <code>web_search</code>. Browser is <em>enabled</em> (output screened by Layer 4).</div>
       </div>
     </div>
     <div class="card" style="margin-bottom: 2px; border-radius: 0;">
       <div class="layer-header">
         <span class="layer-num">2</span>
-        <div><strong>before_tool_call hook</strong> &mdash; Intercept <code>exec</code> commands with <code>curl</code>/<code>wget</code>/<code>lynx</code> to external URLs. Redirect to guarded tools.</div>
+        <div><strong>before_tool_call hook</strong> &mdash; Intercept <code>exec</code> commands with <code>curl</code>/<code>wget</code>/<code>lynx</code>/<code>chromium</code>/<code>playwright</code>/<code>puppeteer</code>. Forces browser use through built-in tools (guarded) rather than raw exec.</div>
       </div>
     </div>
     <div class="card" style="margin-bottom: 2px; border-radius: 0;">
@@ -795,7 +796,7 @@
     <div class="card" style="margin-bottom: 2px; border-radius: 0;">
       <div class="layer-header">
         <span class="layer-num">4</span>
-        <div><strong>tool_result_persist hook</strong> &mdash; Screens HTML/HTTP headers in exec output before persisting to conversation history (defense-in-depth).</div>
+        <div><strong>tool_result_persist hook</strong> &mdash; Screens exec output <em>and</em> all browser tool output (<code>browser_snapshot</code>, <code>browser_navigate</code>, <code>browser_screenshot</code>, etc.) before persisting to conversation history (defense-in-depth).</div>
       </div>
     </div>
     <div class="card" style="border-radius: 0 0 12px 12px;">
