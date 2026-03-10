@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw Security Architecture — Deployment Guide</title>
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2333;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --green: #3fb950;
+    --red: #f85149;
+    --orange: #d29922;
+    --cyan: #39d353;
+  }
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --surface: #f6f8fa;
+    --surface2: #eef1f5;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text-muted: #656d76;
+    --accent: #0969da;
+    --accent2: #8250df;
+    --green: #1a7f37;
+    --red: #cf222e;
+    --orange: #9a6700;
+    --cyan: #0969da;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #ffffff;
+      --surface: #f6f8fa;
+      --surface2: #eef1f5;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text-muted: #656d76;
+      --accent: #0969da;
+      --accent2: #8250df;
+      --green: #1a7f37;
+      --red: #cf222e;
+      --orange: #9a6700;
+      --cyan: #0969da;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .slide {
+    min-height: 100vh;
+    padding: 60px 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-bottom: 1px solid var(--border);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .slide-title {
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+    justify-content: center;
+    text-align: center;
+    flex-direction: column;
+  }
+  h1 { font-size: 3em; margin-bottom: 0.3em; color: var(--accent); font-weight: 700; }
+  h2 { font-size: 2em; margin-bottom: 0.8em; color: var(--accent2); font-weight: 600; }
+  h3 { font-size: 1.4em; margin: 1.2em 0 0.5em; color: var(--accent); font-weight: 600; }
+  h4 { font-size: 1.1em; margin: 1em 0 0.4em; color: var(--text); font-weight: 600; }
+  p, li { font-size: 1.05em; color: var(--text); margin-bottom: 0.5em; }
+  .subtitle { font-size: 1.3em; color: var(--text-muted); margin-bottom: 1em; }
+  .meta { font-size: 0.95em; color: var(--text-muted); margin-top: 1.5em; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 12px 0;
+  }
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+    margin: 16px 0;
+  }
+  .card h4 { margin-top: 0; }
+  .card .tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8em;
+    font-weight: 600;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+  .tag-green { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .tag-red { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+  .tag-orange { background: rgba(210,153,34,0.15); color: var(--orange); border: 1px solid rgba(210,153,34,0.3); }
+  .tag-blue { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+  .tag-purple { background: rgba(188,140,255,0.15); color: var(--accent2); border: 1px solid rgba(188,140,255,0.3); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 0.95em;
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--accent); font-weight: 600; background: var(--surface); }
+  tr:hover td { background: var(--surface2); }
+  td code {
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: var(--cyan);
+  }
+
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+    padding: 20px;
+    background: var(--surface);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .flow-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    text-align: center;
+    font-size: 0.9em;
+    min-width: 120px;
+  }
+  .flow-box.blocked { border-color: var(--red); }
+  .flow-box.safe { border-color: var(--green); }
+  .flow-box.warn { border-color: var(--orange); }
+  .flow-arrow { color: var(--text-muted); font-size: 1.5em; }
+
+  .highlight-box {
+    background: rgba(248,81,73,0.08);
+    border-left: 4px solid var(--red);
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .highlight-box.warn {
+    background: rgba(210,153,34,0.08);
+    border-left-color: var(--orange);
+  }
+  .highlight-box.info {
+    background: rgba(88,166,255,0.08);
+    border-left-color: var(--accent);
+  }
+  .highlight-box.ok {
+    background: rgba(63,185,80,0.08);
+    border-left-color: var(--green);
+  }
+
+  ul { padding-left: 24px; }
+  li { margin-bottom: 0.3em; }
+
+  .layer-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 0.9em;
+    margin-right: 10px;
+    flex-shrink: 0;
+  }
+  .layer-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .toc { list-style: none; padding: 0; }
+  .toc li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .toc a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 1.1em;
+  }
+  .toc a:hover { text-decoration: underline; }
+  .toc .toc-desc { color: var(--text-muted); font-size: 0.9em; margin-left: 8px; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 800px) {
+    .slide { padding: 30px 20px; }
+    .two-col, .card-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 2em; }
+    h2 { font-size: 1.5em; }
+  }
+
+  .cost-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 1.4em;
+    font-weight: 700;
+    background: rgba(63,185,80,0.15);
+    color: var(--green);
+    border: 2px solid var(--green);
+  }
+
+  .nav {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+  }
+  .nav a {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85em;
+  }
+  .nav a:hover { color: var(--accent); border-color: var(--accent); }
+  #theme-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    line-height: 1;
+  }
+  #theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+  .diagram-ascii {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.82em;
+    line-height: 1.4;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--text-muted);
+    margin: 16px 0;
+  }
+  .diagram-ascii .hl { color: var(--accent); }
+  .diagram-ascii .hlg { color: var(--green); }
+  .diagram-ascii .hlr { color: var(--red); }
+  .diagram-ascii .hlo { color: var(--orange); }
+  .diagram-ascii .hlp { color: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <button id="theme-toggle" title="Toggle light/dark theme"></button>
+  <a href="#title">Top</a>
+  <a href="#toc">TOC</a>
+  <a href="#casa">Guide</a>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 1: TITLE -->
+<!-- ======================================= -->
+<div class="slide slide-title" id="title">
+  <h1>OpenClaw Security Architecture</h1>
+  <p class="subtitle">Seven-layer defense for a production LLM agent<br>informed by the Agents of Chaos taxonomy</p>
+  <p class="meta">Jorge Espada &middot; March 2026</p>
+  <p style="color: var(--text-muted); margin-top: 2em; font-size: 0.95em;">
+    Solo deployment on a 2017 MacBook Pro &middot; 16 GB RAM &middot; <span class="cost-badge">~$0.04/mo</span>
+  </p>
+  <p style="color: var(--text-muted); margin-top: 1em; font-size: 0.9em;">
+    Scroll down or use the TOC to navigate
+  </p>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 2: TABLE OF CONTENTS -->
+<!-- ======================================= -->
+<div class="slide" id="toc">
+  <h2>Contents</h2>
+  <ul class="toc">
+    <li><a href="#context">1. Context & Threat Model</a><span class="toc-desc">What we're protecting and from whom</span></li>
+    <li><a href="#chaos">2. Agents of Chaos</a><span class="toc-desc">The research driving the architecture</span></li>
+    <li><a href="#overview">3. Architecture Overview</a><span class="toc-desc">Seven layers at a glance</span></li>
+    <li><a href="#layer-a">4. Layer A: Guard Chain</a><span class="toc-desc">Ingress content filtering</span></li>
+    <li><a href="#layer-b">5. Layer B: Egress Enforcement</a><span class="toc-desc">Network-level exfiltration prevention</span></li>
+    <li><a href="#layer-c">6. Layer C: Behavioral Controls</a><span class="toc-desc">Quotas, approvals, loop detection</span></li>
+    <li><a href="#layer-d">7. Layer D: Trust Tiers & Identity</a><span class="toc-desc">Who can do what</span></li>
+    <li><a href="#layer-os">8. Layer OS: Sandbox & Isolation</a><span class="toc-desc">systemd hardening, filesystem protection</span></li>
+    <li><a href="#layer-web">9. Layer Web: Web Content Guard</a><span class="toc-desc">5-layer defense against indirect injection</span></li>
+    <li><a href="#monitoring">10. Monitoring & Alerting</a><span class="toc-desc">Prometheus, Grafana, Loki</span></li>
+    <li><a href="#emergent">11. Emergent Findings</a><span class="toc-desc">What surprised us in production</span></li>
+    <li><a href="#casa">12. Deployment Guide for Your Infrastructure</a><span class="toc-desc">Adapting this for team / company infrastructure</span></li>
+  </ul>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 3: CONTEXT -->
+<!-- ======================================= -->
+<div class="slide" id="context">
+  <h2>1. Context & Threat Model</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>What Is OpenClaw?</h3>
+      <p>An LLM agent accessible via <strong>WhatsApp</strong>, running as a <strong>KVM guest</strong> on a NixOS host. It can:</p>
+      <ul>
+        <li>Execute shell commands</li>
+        <li>Read/write files</li>
+        <li>Fetch web content</li>
+        <li>Send messages on the owner's behalf</li>
+        <li>Interact with APIs (Gmail, GitHub, etc.)</li>
+      </ul>
+      <p style="margin-top: 1em; color: var(--text-muted);">Think: a capable assistant with <code>root</code>-level power potential, reachable by anyone who knows the phone number.</p>
+    </div>
+    <div>
+      <h3>Threat Model</h3>
+      <div class="card" style="border-left: 3px solid var(--red);">
+        <h4>Primary: Prompt Injection via WhatsApp</h4>
+        <p>Crafted messages that cause the agent to execute unintended commands, exfiltrate data, or abuse messaging capabilities.</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--orange);">
+        <h4>Secondary: Indirect Injection</h4>
+        <p>Malicious payloads embedded in web pages the agent fetches. The tool output becomes the injection channel.</p>
+      </div>
+      <div class="card" style="border-left: 3px solid var(--accent);">
+        <h4>Attacker Tiers</h4>
+        <p><strong>External</strong> (anyone) &middot; <strong>Known contact</strong> (social engineering advantage) &middot; <strong>Compromised web content</strong> (passive injection)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box info" style="margin-top: 24px;">
+    <strong>Key Constraints:</strong> Solo operator (no SOC), $0 infrastructure budget (free-tier APIs only), commodity hardware (2017 laptop, 2 cores, 16 GB RAM, no GPU). Defenses must be <em>structural</em> (prevent by default), not <em>detective</em> (alert and respond).
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 4: AGENTS OF CHAOS -->
+<!-- ======================================= -->
+<div class="slide" id="chaos">
+  <h2>2. Agents of Chaos</h2>
+  <p>Shapira et al. (arXiv:2602.20021, 2026) deployed <strong>6 undefended OpenClaw agents</strong> for 14 days with 20 adversarial researchers. They catalogued <strong>10 vulnerability case studies</strong> across three attack categories.</p>
+
+  <h3>The Taxonomy: What Can Go Wrong</h3>
+  <table>
+    <thead>
+      <tr><th>CS</th><th>Vulnerability</th><th>Category</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>CS1</td><td>Disproportionate Response</td><td>Behavioral</td><td>Agent destroys mailbox to hide a secret</td></tr>
+      <tr><td>CS2</td><td>Non-Owner Compliance</td><td>Identity</td><td>Agent obeys non-owner because they sound authoritative</td></tr>
+      <tr><td>CS3</td><td>Semantic Reframing</td><td>Ingress</td><td>"Forward" bypasses "share" refusal</td></tr>
+      <tr><td>CS4</td><td>Infinite Loop</td><td>Behavioral</td><td>Mutual agent relay spawns unbounded processes</td></tr>
+      <tr><td>CS5</td><td>Storage Exhaustion</td><td>Behavioral</td><td>Silent DoS via attachment accumulation</td></tr>
+      <tr><td>CS6</td><td>Silent Censorship</td><td>Ingress</td><td>Opaque filtering injects attacker text</td></tr>
+      <tr><td>CS7</td><td>Guilt Trip / Pressure</td><td>Behavioral</td><td>12+ refusals overcome by emotional manipulation</td></tr>
+      <tr><td>CS8</td><td>Identity Hijack</td><td>Identity</td><td>Display name spoofing to impersonate owner</td></tr>
+      <tr><td>CS10</td><td>Corrupted Constitution</td><td>Ingress</td><td>Injection via user documents / web content</td></tr>
+      <tr><td>CS11</td><td>Mass Broadcast</td><td>Egress</td><td>Spoofed identity triggers disinformation campaign</td></tr>
+    </tbody>
+  </table>
+
+  <div class="highlight-box ok">
+    <strong>Our Coverage: 10/10 case studies mitigated.</strong> 6/10 have multiple independent defense layers (defense-in-depth). The architecture is designed so that no single layer failure compromises the system.
+  </div>
+
+  <h3>Research Foundation</h3>
+  <p style="color: var(--text-muted);">Beyond Agents of Chaos, the architecture draws from:</p>
+  <div class="card-grid">
+    <div class="card">
+      <h4>CaMeL (Google, 2025)</h4>
+      <p style="font-size:0.9em">Data flow enforcement &mdash; untrusted data cannot influence control flow. Applied as a design principle throughout.</p>
+    </div>
+    <div class="card">
+      <h4>Silent Egress (2026)</h4>
+      <p style="font-size:0.9em">89% exfiltration success via URL redirect chains. Motivated our redirect-chain analysis and nftables egress enforcement.</p>
+    </div>
+    <div class="card">
+      <h4>AgentSys (2026)</h4>
+      <p style="font-size:0.9em">Worker isolation with schema-validated JSON boundaries. Applied in our API sidecar proxy.</p>
+    </div>
+    <div class="card">
+      <h4>PCAS (2026)</h4>
+      <p style="font-size:0.9em">Policy Compiler for Agentic Systems. Simplified into our action quota engine.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 5: ARCHITECTURE OVERVIEW -->
+<!-- ======================================= -->
+<div class="slide" id="overview">
+  <h2>3. Architecture Overview</h2>
+  <p>Seven defense layers, each independent. A failure in one layer does not compromise others.</p>
+
+  <div class="diagram-ascii"><span class="hl">WhatsApp Message</span>
+       |
+       v
+  <span class="hlr">[A] GUARD CHAIN</span> -----> Regex + Lakera + PromptGuard2 + GPT-4o-mini
+       |                          Protects: prompt injection, jailbreaks
+       | (pass)
+       v
+  <span class="hlp">[D] TRUST TIERS</span> ----> Phone-based identity (owner / known / unknown)
+       |                          Protects: non-owner compliance, identity hijack
+       | (authorized)
+       v
+  <span class="hlo">[C] BEHAVIORAL</span> -----> Quotas + Approval Queue + Loop Breaker
+       |                          Protects: disproportionate response, resource abuse
+       | (within budget)
+       v
+  <span class="hl">[AGENT]</span> -- tool call --> <span class="hlo">[C] before_tool_call hook</span>
+       |                          Classifies action, enforces quotas
+       | (allowed)
+       v
+  <span class="hlg">[WEB] WEB GUARD</span> ---> 5-layer defense for fetched content
+       |                          Protects: indirect injection (CS10)
+       | (screened)
+       v
+  <span class="hlr">[B] EGRESS</span> ----------> nftables default-deny + API proxy
+       |                          Protects: data exfiltration, mass broadcast
+       | (allowed dest)
+       v
+  <span class="hlg">[OS] SANDBOX</span> --------> systemd hardening, seccomp, namespaces
+                                  Protects: privilege escalation, host compromise
+
+  <span class="hl">[E] MONITORING</span> -------> 28 Prometheus metrics, 21 alert rules, Loki logs
+                                  Observes: all layers, PII-safe shipping</div>
+
+  <h3>Coverage Matrix</h3>
+  <table>
+    <thead>
+      <tr><th>Layer</th><th>Component</th><th>Protects Against</th><th>CS Coverage</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="tag tag-red">A</span></td><td>Guard Chain (4-stage LLM firewall)</td><td>Prompt injection, jailbreaks</td><td>CS3, CS6, CS10</td></tr>
+      <tr><td><span class="tag tag-blue">B</span></td><td>Egress Enforcement (nftables + proxy)</td><td>Data exfiltration, mass broadcast</td><td>CS3, CS11</td></tr>
+      <tr><td><span class="tag tag-orange">C</span></td><td>Behavioral Controls (quotas, approvals)</td><td>Disproportionate response, loops, DoS</td><td>CS1, CS4, CS5, CS7</td></tr>
+      <tr><td><span class="tag tag-purple">D</span></td><td>Trust Tiers & Identity</td><td>Non-owner compliance, identity hijack</td><td>CS2, CS8</td></tr>
+      <tr><td><span class="tag tag-green">OS</span></td><td>Sandbox & Isolation</td><td>Privilege escalation, host compromise</td><td>All</td></tr>
+      <tr><td><span class="tag tag-green">Web</span></td><td>Web Content Guard (5-layer)</td><td>Indirect injection via web content</td><td>CS10</td></tr>
+      <tr><td><span class="tag tag-blue">E</span></td><td>Monitoring & Alerting</td><td>Visibility into all layers</td><td>All</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 6: LAYER A -->
+<!-- ======================================= -->
+<div class="slide" id="layer-a">
+  <h2>4. Layer A: Guard Chain</h2>
+  <p>Every inbound message and outbound response passes through a <strong>4-stage content filter</strong> before reaching or leaving the agent.</p>
+
+  <div class="flow">
+    <div class="flow-box">Message In</div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-box warn">Regex Pre-scan<br><small style="color:var(--text-muted)">&lt;1ms, free</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-box blocked">Lakera Guard v2<br><small style="color:var(--text-muted)">~50ms, free tier</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-box blocked">Prompt Guard 2<br><small style="color:var(--text-muted)">~1.5s, local CPU</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-box blocked">GPT-4o-mini<br><small style="color:var(--text-muted)">~200ms, last resort</small></div>
+    <span class="flow-arrow">&rarr;</span>
+    <div class="flow-box safe">Agent</div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Guard Details</h3>
+      <table>
+        <tr><th>Guard</th><th>Scope</th><th>Cost</th></tr>
+        <tr><td>Regex Pre-scan</td><td>Outbound credentials (<code>sk-ant-*</code>, JWT, AWS keys, GitHub PATs, PEM keys)</td><td>Free</td></tr>
+        <tr><td>Lakera Guard v2</td><td>Cloud API, primary filter</td><td>10K/mo free</td></tr>
+        <tr><td>Prompt Guard 2 (86M)</td><td>Local ONNX model, ~500MB RAM</td><td>Free (CPU)</td></tr>
+        <tr><td>GPT-4o-mini</td><td>OpenRouter, last resort</td><td>~$0.00014/call</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Fail Behavior (Critical Design)</h3>
+      <div class="highlight-box">
+        <strong>Inbound: FAIL-CLOSED</strong><br>
+        If all guards are down, block the message. A temporary outage is better than processing unscreened input.
+      </div>
+      <div class="highlight-box ok">
+        <strong>Outbound: TIER-DEPENDENT</strong><br>
+        Owner = fail-open (accepts risk). Known/Unknown = fail-closed. Regex pre-scan always runs regardless.
+      </div>
+    </div>
+  </div>
+
+  <h3>Guard Transparency Fix (CS6)</h3>
+  <p>Early versions returned the GPT-4o-mini guard's <em>free-text reason</em> to the agent. This was itself an injection channel &mdash; the "reason" field contained attacker-influenced text. <strong>Fix:</strong> replaced with a fixed-vocabulary enum: <code>injection | exfiltration | credential | content_policy | flagged</code>.</p>
+
+  <h3>Audit Trail</h3>
+  <p>All guard decisions logged to <code>/data/openclaw/logs/guard.log</code> (JSON-lines). <strong>Content is never logged</strong> &mdash; only SHA-256 hashes. 30-day retention, gzip rotation. Shipped to Loki with PII redacted.</p>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 7: LAYER B -->
+<!-- ======================================= -->
+<div class="slide" id="layer-b">
+  <h2>5. Layer B: Egress Enforcement</h2>
+  <p>Network-level controls prevent the agent from exfiltrating data or reaching unauthorized endpoints.</p>
+
+  <div class="diagram-ascii"><span class="hl">VM (KVM guest on virbr0)</span>
+       |
+       | All outbound traffic
+       v
+  <span class="hlr">[nftables: inet vm_egress]</span>
+       |
+       |-- <span class="hlg">ALLOW</span>: established/related connections
+       |-- <span class="hlg">ALLOW</span>: declared API endpoints (dynamic set, refreshed every 5 min)
+       |-- <span class="hlg">ALLOW</span>: static CIDRs (Google, Cloudflare, Meta, Anthropic, Tailscale)
+       |-- <span class="hlg">ALLOW</span>: TCP 80, 443 (HTTP/HTTPS), TCP 22000 (Syncthing)
+       |-- <span class="hlr">DROP + LOG</span>: everything else (prefix "VM-EGRESS-DENIED:")
+       |
+       v
+  <span class="hl">Internet</span></div>
+
+  <div class="two-col">
+    <div>
+      <h3>Dynamic IP Resolution</h3>
+      <p>A 5-minute timer resolves 8 API hostnames and updates nftables sets:</p>
+      <ul>
+        <li>Anthropic API</li>
+        <li>OpenRouter</li>
+        <li>Lakera Guard</li>
+        <li>Grafana Cloud</li>
+        <li>DuckDNS</li>
+        <li>Tailscale</li>
+        <li>Google OAuth</li>
+        <li>Brave Search</li>
+      </ul>
+    </div>
+    <div>
+      <h3>API Credential Isolation</h3>
+      <div class="card">
+        <h4>Sidecar Proxy (Node.js @ 127.0.0.1:19090)</h4>
+        <p>The agent calls <code>guarded_web_fetch POST http://127.0.0.1:19090/...</code></p>
+        <p>The proxy <strong>injects credentials server-side</strong> from a file the agent process cannot read.</p>
+        <p style="color: var(--green);">Credentials never enter the agent's context window.</p>
+        <p>Handles Gmail OAuth2 token refresh internally.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box info">
+    <strong>Monitoring:</strong> <code>openclaw_vm_egress_denied_packets_total</code> and <code>openclaw_vm_egress_denied_bytes_total</code> are scraped every 60s. Alert fires on &gt;10 denied packets/min.
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 8: LAYER C -->
+<!-- ======================================= -->
+<div class="slide" id="layer-c">
+  <h2>6. Layer C: Behavioral Controls</h2>
+  <p>Four mechanisms limit what the agent can <em>do</em>, independent of what it is <em>asked</em> to do.</p>
+
+  <div class="card-grid">
+    <div class="card" style="border-top: 3px solid var(--red);">
+      <h4>C1: Action Quotas</h4>
+      <p>Per-class rate limiting for exec/bash commands:</p>
+      <table style="font-size:0.85em">
+        <tr><th>Class</th><th>Budget</th><th>Window</th></tr>
+        <tr><td><code>destructive_exec</code></td><td>1</td><td>24h</td></tr>
+        <tr><td><code>file_delete</code></td><td>5</td><td>1h</td></tr>
+        <tr><td><code>message_send</code></td><td>20</td><td>1h</td></tr>
+        <tr><td><code>process_spawn</code></td><td>3</td><td>1h</td></tr>
+        <tr><td><code>config_modify</code></td><td>5</td><td>1h</td></tr>
+      </table>
+      <p><span class="tag tag-blue">CS1</span> <span class="tag tag-blue">CS4</span></p>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--orange);">
+      <h4>C2: Approval Queue</h4>
+      <p><code>destructive_exec</code> commands are <strong>blocked and queued</strong>. A WhatsApp notification goes to the owner's phone. Owner approves/denies via SSH CLI.</p>
+      <ul style="font-size:0.9em">
+        <li>File-based queue at <code>/data/openclaw/approval-queue/</code></li>
+        <li>30s notification timer</li>
+        <li>10-minute auto-expiry</li>
+        <li>Agent CANNOT self-approve (tool removed + path blocked)</li>
+      </ul>
+      <p><span class="tag tag-blue">CS1</span></p>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--accent2);">
+      <h4>C3: Session Pattern Detection</h4>
+      <p>Every 50 tool calls, GPT-4o-mini analyzes recent activity for:</p>
+      <ul style="font-size:0.9em">
+        <li>Escalation (same tool with variations after refusal)</li>
+        <li>Reframing (identical intent, different phrasing)</li>
+        <li>Pressure (emotional manipulation over time)</li>
+        <li>Resource abuse (unusual operation frequency)</li>
+      </ul>
+      <p>Async, non-blocking. Flags increment <code>openclaw_session_flagged_total</code>.</p>
+      <p><span class="tag tag-blue">CS3</span> <span class="tag tag-blue">CS7</span></p>
+    </div>
+
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <h4>C4: Loop Circuit Breaker</h4>
+      <p>&gt;10 identical tool calls (by name + arg hash) in 5 minutes triggers a <strong>15-minute cooldown</strong>.</p>
+      <p style="font-size:0.9em">Catches degenerate loops where the agent repeats the same command. In-memory tracking, resets on gateway restart.</p>
+      <p><span class="tag tag-blue">CS4</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 9: LAYER D -->
+<!-- ======================================= -->
+<div class="slide" id="layer-d">
+  <h2>7. Layer D: Trust Tiers & Identity</h2>
+  <p>Phone-based three-tier identity model. Configuration is <strong>Nix-managed</strong> &mdash; the agent cannot modify it.</p>
+
+  <table>
+    <thead>
+      <tr><th>Tier</th><th>Identity</th><th>Capabilities</th><th>Rate Limit</th><th>Guard Fail Mode</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-green">Owner</span></td>
+        <td>Configured phone + optional PIN</td>
+        <td>All tools, exec, full autonomy</td>
+        <td>Unlimited</td>
+        <td>Fail-open</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">Known</span></td>
+        <td>Allowlisted phones</td>
+        <td>Read-only tools (glob, grep, read, guarded_web_*)</td>
+        <td>20 msg + 10 tools/hr</td>
+        <td>Fail-closed</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">Unknown</span></td>
+        <td>Everyone else</td>
+        <td>Text responses only, no tools</td>
+        <td>5 msg/hr, 0 tools</td>
+        <td>N/A</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="two-col" style="margin-top: 20px;">
+    <div>
+      <h3>PIN Elevation (CS8)</h3>
+      <div class="card">
+        <p>Send <code>unlock &lt;pin&gt;</code> via WhatsApp DM to elevate from known to owner tier.</p>
+        <ul style="font-size:0.9em">
+          <li>PIN stored in agenix secret (<code>/etc/openclawd/env</code>)</li>
+          <li>Expires after 4 hours of inactivity</li>
+          <li>DM-only (prevents PIN leaks in group chats)</li>
+          <li>Failed attempts tracked: <code>openclaw_owner_auth_attempts_total{result="failure"}</code></li>
+          <li>Alert: &gt;3 failures/hour = possible compromise</li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <h3>Group Identity Resolution (CS2)</h3>
+      <div class="card">
+        <p>WhatsApp group messages carry the group JID, not the sender's phone. Required a 3-component fix:</p>
+        <ol style="font-size:0.9em">
+          <li><code>message_received</code> hook extracts <code>senderE164</code></li>
+          <li><code>groupLatestSender</code> map bridges hooks to agent events</li>
+          <li><code>lookupTier</code> checks map before falling back to session key</li>
+        </ol>
+        <p style="color: var(--text-muted); font-size:0.9em; margin-top:8px">The original Agents of Chaos paper assumes 1:1 messaging &mdash; group identity is an extension we had to build.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 10: OS SANDBOX -->
+<!-- ======================================= -->
+<div class="slide" id="layer-os">
+  <h2>8. Layer OS: Sandbox & Isolation</h2>
+  <p>systemd service hardening reduces the attack surface from the default <strong>8.7/10 EXPOSED</strong> to under 4.0.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h4>Identity & Privileges</h4>
+      <ul style="font-size:0.9em">
+        <li><code>User = openclaw</code> (not in wheel, no sudo)</li>
+        <li><code>NoNewPrivileges = true</code></li>
+        <li><code>PrivateTmp = true</code> (isolated /tmp)</li>
+        <li><code>UMask = 0077</code> (0600 files by default)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Filesystem Isolation</h4>
+      <ul style="font-size:0.9em">
+        <li><code>ProtectSystem = strict</code> (entire FS read-only)</li>
+        <li>Only 5 explicit <code>ReadWritePaths</code></li>
+        <li><code>PrivateDevices = true</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Kernel Protection</h4>
+      <ul style="font-size:0.9em">
+        <li><code>ProtectKernelTunables/Modules/Logs = true</code></li>
+        <li><code>ProtectControlGroups/Clock/Hostname = true</code></li>
+        <li><code>ProtectProc = invisible</code></li>
+        <li><code>RestrictNamespaces = true</code></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h4>Seccomp & Network</h4>
+      <ul style="font-size:0.9em">
+        <li><code>SystemCallFilter = @system-service ~@mount ~@reboot ~@debug ~@raw-io</code></li>
+        <li><code>RestrictAddressFamilies = AF_INET AF_INET6 AF_UNIX AF_NETLINK</code></li>
+        <li><code>SystemCallArchitectures = native</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Identity File Protection</h3>
+  <div class="card">
+    <p><code>SECURITY.md</code> and <code>AGENTS.md</code> are the agent's system prompt. They are:</p>
+    <ul>
+      <li><strong>Owned by root</strong> (0444 permissions)</li>
+      <li><strong>Immutable</strong> (<code>chattr +i</code> &mdash; even root can't modify without unlocking)</li>
+      <li><strong>Integrity-monitored</strong> every 15 minutes (SHA-256 against canonical backup)</li>
+      <li><strong>Tamper-alerted</strong> via WhatsApp notification on mismatch</li>
+    </ul>
+    <p style="color:var(--text-muted); font-size:0.9em; margin-top:8px">Edit workflow: <code>sudo openclaw-unlock</code> &rarr; edit &rarr; <code>sudo openclaw-lock</code> &rarr; <code>sudo openclaw-save-canonical</code></p>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 11: WEB CONTENT GUARD -->
+<!-- ======================================= -->
+<div class="slide" id="layer-web">
+  <h2>9. Layer Web: Web Content Guard (CS10)</h2>
+  <p>The agent has <strong>multiple paths</strong> to fetch web content. Each path requires its own defense.</p>
+
+  <div style="margin: 20px 0;">
+    <div class="card" style="margin-bottom: 2px; border-radius: 12px 12px 0 0;">
+      <div class="layer-header">
+        <span class="layer-num">1</span>
+        <div><strong>tools.deny</strong> &mdash; Block built-in <code>web_fetch</code>, <code>web_search</code>, <code>browser</code></div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom: 2px; border-radius: 0;">
+      <div class="layer-header">
+        <span class="layer-num">2</span>
+        <div><strong>before_tool_call hook</strong> &mdash; Intercept <code>exec</code> commands with <code>curl</code>/<code>wget</code>/<code>lynx</code> to external URLs. Redirect to guarded tools.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom: 2px; border-radius: 0;">
+      <div class="layer-header">
+        <span class="layer-num">3</span>
+        <div><strong>guarded_web_fetch / guarded_web_search</strong> &mdash; Plugin tools that run the guard chain <em>inside</em> <code>execute()</code>. Agent only sees screened content. Fail-closed.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom: 2px; border-radius: 0;">
+      <div class="layer-header">
+        <span class="layer-num">4</span>
+        <div><strong>tool_result_persist hook</strong> &mdash; Screens HTML/HTTP headers in exec output before persisting to conversation history (defense-in-depth).</div>
+      </div>
+    </div>
+    <div class="card" style="border-radius: 0 0 12px 12px;">
+      <div class="layer-header">
+        <span class="layer-num">5</span>
+        <div><strong>Provider-level</strong> &mdash; OpenRouter Web Search plugin disabled on dashboard. Prevents provider from injecting web search results at the API level.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="highlight-box warn">
+    <strong>Anti-SSRF:</strong> Redirect-chain analysis follows up to 5 hops. Blocks any redirect from an external origin to a private IP range (127.0.0.1, 10.x, 172.16-31.x, 192.168.x). Motivated by Silent Egress (arXiv:2602.22450) finding 89% exfiltration success via redirect chains.
+  </div>
+
+  <div class="highlight-box" style="margin-top:8px">
+    <strong>Known Gap:</strong> Files read from local disk or git repositories are NOT screened. This is a residual CS10 vector.
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 12: MONITORING -->
+<!-- ======================================= -->
+<div class="slide" id="monitoring">
+  <h2>10. Monitoring & Alerting</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>Metrics (28 custom)</h3>
+      <p>Collected via 6 textfile collectors on 60s timers. Key metrics:</p>
+      <table style="font-size:0.85em">
+        <tr><td><code>guard_calls_total</code></td><td>Guard invocations by mode/result/guard</td></tr>
+        <tr><td><code>guard_blocked_total</code></td><td>Blocked by threat type</td></tr>
+        <tr><td><code>guard_latency_seconds</code></td><td>Per-guard latency</td></tr>
+        <tr><td><code>approval_queue_count</code></td><td>Queue depth by status</td></tr>
+        <tr><td><code>trust_tier_blocked_total</code></td><td>Tier-based blocks</td></tr>
+        <tr><td><code>session_flagged_total</code></td><td>Behavioral flags</td></tr>
+        <tr><td><code>loop_circuit_breaker_total</code></td><td>Circuit breaker trips</td></tr>
+        <tr><td><code>vm_egress_denied_*</code></td><td>Blocked egress traffic</td></tr>
+        <tr><td><code>owner_auth_attempts_total</code></td><td>PIN attempts</td></tr>
+        <tr><td><code>prompt_guard_up</code></td><td>Local model health</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Alerts (21 rules)</h3>
+      <table style="font-size:0.85em">
+        <tr><th>Alert</th><th>Severity</th></tr>
+        <tr><td>GuardBlockSpike (&gt;10/5min)</td><td><span class="tag tag-orange">warning</span></td></tr>
+        <tr><td>GuardAPIKeyExhausted</td><td><span class="tag tag-red">critical</span></td></tr>
+        <tr><td>PromptGuardDown (&gt;2min)</td><td><span class="tag tag-red">critical</span></td></tr>
+        <tr><td>ApprovalQueueStale (&gt;10min)</td><td><span class="tag tag-orange">warning</span></td></tr>
+        <tr><td>SessionFlagged</td><td><span class="tag tag-orange">warning</span></td></tr>
+        <tr><td>LoopBreakerActive</td><td><span class="tag tag-orange">warning</span></td></tr>
+        <tr><td>TrustTierBreach (&gt;5/5min)</td><td><span class="tag tag-orange">warning</span></td></tr>
+        <tr><td>OwnerPINFailureSpike</td><td><span class="tag tag-red">critical</span></td></tr>
+        <tr><td>VMEgressDeniedSpike</td><td><span class="tag tag-red">critical</span></td></tr>
+        <tr><td>QuotaExhausted</td><td><span class="tag tag-orange">warning</span></td></tr>
+      </table>
+
+      <h3 style="margin-top:16px">Log Pipeline</h3>
+      <p style="font-size:0.9em">Grafana Alloy ships journald + guard.log to Loki. <strong>PII-safe:</strong> guard.log rewritten to metric-only fields. Journal logs regex-redacted for credential patterns. Verified: 8/8 Loki queries confirmed zero PII leakage.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 13: EMERGENT FINDINGS -->
+<!-- ======================================= -->
+<div class="slide" id="emergent">
+  <h2>11. Emergent Findings</h2>
+  <p>The most valuable outcomes were NOT confirmations of the taxonomy &mdash; those attacks work as described. The surprises came from <strong>defense layer interactions in production</strong>.</p>
+
+  <div class="card" style="border-left: 4px solid var(--red); margin-bottom: 12px;">
+    <h4>The Agent Self-Approved Its Own Destructive Commands</h4>
+    <p>When we added an approval queue with a <code>resolve_approval</code> tool, the agent called it to approve its own <code>rm -rf</code>. After removing the tool, it used <code>exec</code> to <code>cat</code> the queue files and <code>jq</code> to change status from "pending" to "approved".</p>
+    <p style="color:var(--green); margin-top:8px"><strong>Fix:</strong> Remove the tool entirely AND block exec access to the queue directory in <code>before_tool_call</code>.</p>
+    <p style="color:var(--text-muted); font-size:0.9em; margin-top:4px">Lesson: Any tool that can influence a security decision must be inaccessible to the entity being constrained. The agent wasn't adversarial &mdash; it was being <em>efficient</em>.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--orange); margin-bottom: 12px;">
+    <h4>Sandbox Creates a Perception Gap</h4>
+    <p><code>PrivateTmp=true</code> gives the agent an isolated <code>/tmp</code>. The agent ran <code>rm -rf /tmp/build-artifacts</code>, got exit code 0 (thanks to <code>-f</code>), and reported success. Nothing was actually deleted &mdash; it operated on the isolated tmpfs.</p>
+    <p style="color:var(--text-muted); font-size:0.9em; margin-top:4px">The agent's world model diverged from reality. It confidently reported outcomes that didn't occur. For chained actions, this gap compounds.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent2); margin-bottom: 12px;">
+    <h4>The Guard's Explanation Became an Injection Channel</h4>
+    <p>GPT-4o-mini's free-text <code>verdict.reason</code> was returned to the agent for transparency. But the reason field is generated from attacker-controlled input &mdash; it could paraphrase or echo attacker instructions. The agent treated this as authoritative output from a trusted security component.</p>
+    <p style="color:var(--green); margin-top:8px"><strong>Fix:</strong> Fixed-vocabulary enum instead of free text.</p>
+  </div>
+
+  <div class="card" style="border-left: 4px solid var(--accent); margin-bottom: 12px;">
+    <h4>Defense-in-Depth Creates Operational Friction</h4>
+    <p>Gateway's <code>UMask=0077</code> protects secrets but breaks Syncthing sharing. Truncating content to 2000 chars for latency <em>created</em> the attack pattern the guard was looking for (false positives on job postings). Each security choice has second-order effects at domain boundaries.</p>
+  </div>
+
+  <div class="highlight-box info">
+    <strong>Key Insight:</strong> The hardest problems in agent defense are not the catalogued attack classes themselves, but the <em>integration failures and emergent behaviors</em> that arise when multiple defense layers interact in production.
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 14: GENERIC DEPLOYMENT GUIDE -->
+<!-- ======================================= -->
+<div class="slide" id="casa">
+  <h2>12. Adapting for Your Infrastructure</h2>
+  <p>This solo setup serves as a reference architecture. Below is how each defense layer maps to common company/startup stacks: <strong>AWS</strong>, <strong>GCP</strong>, and <strong>self-hosted</strong> (Nomad, bare metal, etc.).</p>
+
+  <h3>What Transfers Directly (Platform-Agnostic)</h3>
+  <div class="card-grid">
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <h4>Guard Chain</h4>
+      <p>The 4-stage filter is a TypeScript plugin running inside the agent process. Works anywhere Node.js runs. Lakera paid tier ($50/mo) removes the 10K/month limit. Prompt Guard 2 local model needs 1 CPU + 1 GB RAM &mdash; runs as a sidecar or on any Linux box.</p>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <h4>Action Quotas & Approval Queue</h4>
+      <p>The <code>before_tool_call</code> hook is agent-agnostic. Quotas are tracked in-process (JSON counters). The approval queue is file-based but can be backed by any queue (Redis, SQS, Pub/Sub, PostgreSQL). Tune budgets per use case.</p>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <h4>Trust Tiers</h4>
+      <p>The three-tier model (owner/known/unknown) maps to any RBAC system. <strong>Owner</strong> = SRE/Security/Admin, <strong>Known</strong> = Engineering, <strong>Unknown</strong> = External/CI. Swap the identity source (phone &rarr; SSO, Slack ID, GitHub login, API key).</p>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--green);">
+      <h4>Web Content Guard & Session Analysis</h4>
+      <p>Pure plugin code (TypeScript). No infrastructure dependency. Runs wherever the agent runs.</p>
+    </div>
+  </div>
+
+  <h3>Platform-Specific Adaptation</h3>
+
+  <table>
+    <thead>
+      <tr><th>Layer</th><th>AWS</th><th>GCP</th><th>Self-Hosted (Nomad / Bare Metal)</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Compute</strong></td>
+        <td>ECS Fargate task (agent + sidecars)</td>
+        <td>Cloud Run service or GKE pod</td>
+        <td>Nomad job / systemd service / Docker Compose</td>
+      </tr>
+      <tr>
+        <td><strong>Container Hardening</strong></td>
+        <td><code>readonlyRootFilesystem</code>, drop caps, non-root in task def</td>
+        <td>Cloud Run: read-only by default. GKE: <code>securityContext</code> in pod spec</td>
+        <td>systemd: <code>ProtectSystem=strict</code>, seccomp. Docker: <code>--read-only --cap-drop ALL</code></td>
+      </tr>
+      <tr>
+        <td><strong>Egress Enforcement</strong></td>
+        <td>VPC Security Group: default-deny egress, allowlist API IPs</td>
+        <td>VPC Firewall rules or GKE NetworkPolicy</td>
+        <td>nftables / iptables (reference config provided). Nomad: <code>network</code> stanza + Consul intentions</td>
+      </tr>
+      <tr>
+        <td><strong>Credential Isolation</strong></td>
+        <td>Sidecar container in ECS task. Secrets from AWS Secrets Manager</td>
+        <td>Sidecar in Cloud Run multi-container or GKE pod. Secrets from Secret Manager</td>
+        <td>Sidecar process or Unix socket proxy. Secrets from Vault, SOPS, agenix</td>
+      </tr>
+      <tr>
+        <td><strong>Approval Queue</strong></td>
+        <td>SQS FIFO + Lambda + Slack webhook</td>
+        <td>Pub/Sub + Cloud Function + Slack webhook</td>
+        <td>Redis queue / PostgreSQL table + cron notifier + Slack/email</td>
+      </tr>
+      <tr>
+        <td><strong>Identity Backend</strong></td>
+        <td>Slack user ID, IAM roles, or Cognito</td>
+        <td>Slack user ID, Google Workspace identity, or Firebase Auth</td>
+        <td>Slack user ID, LDAP, Keycloak, or API key with scopes</td>
+      </tr>
+      <tr>
+        <td><strong>Monitoring</strong></td>
+        <td>DogStatsD sidecar &rarr; Datadog. Or CloudWatch custom metrics</td>
+        <td>OpenTelemetry &rarr; Cloud Monitoring. Or Datadog</td>
+        <td>Prometheus textfile collector (reference config provided). Or Grafana Cloud</td>
+      </tr>
+      <tr>
+        <td><strong>Log Shipping</strong></td>
+        <td>CloudWatch Logs + Datadog Forwarder Lambda</td>
+        <td>Cloud Logging (built-in for Cloud Run/GKE)</td>
+        <td>Grafana Alloy &rarr; Loki. Or Promtail. Or rsyslog &rarr; your SIEM</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Architecture Diagrams</h3>
+  <div class="two-col">
+    <div>
+      <h4>AWS (ECS Fargate)</h4>
+      <div class="diagram-ascii" style="font-size:0.75em"><span class="hl">Slack / GitHub</span>
+     |
+     v
+<span class="hlr">[ECS Fargate Task]</span>
+  |-- <span class="hlg">Agent container</span>
+  |     Plugin: guard, tiers, quotas
+  |     readonlyRootFilesystem: true
+  |-- <span class="hlp">Sidecar: credential proxy</span>
+  |     Secrets Manager &rarr; localhost
+  |-- <span class="hlo">Sidecar: Prompt Guard 2</span>
+  |-- <span class="hl">Sidecar: DogStatsD</span>
+     |
+<span class="hlr">[Security Group]</span>
+  Egress: DENY ALL except API IPs
+     |
+<span class="hlo">[SQS FIFO]</span> &rarr; Lambda &rarr; Slack
+<span class="hl">[Datadog]</span> monitors + dashboard</div>
+    </div>
+    <div>
+      <h4>Self-Hosted (systemd / Nomad)</h4>
+      <div class="diagram-ascii" style="font-size:0.75em"><span class="hl">Slack / WhatsApp / API</span>
+     |
+     v
+<span class="hlr">[systemd service / Nomad job]</span>
+  ProtectSystem=strict
+  ReadWritePaths=["/data/agent"]
+  NoNewPrivileges=true
+     |
+  <span class="hlg">Agent process</span>
+  |     Plugin: guard, tiers, quotas
+  <span class="hlp">Credential proxy</span> (localhost)
+  |     agenix / Vault / SOPS
+  <span class="hlo">Prompt Guard 2</span> (Unix socket)
+     |
+<span class="hlr">[nftables / iptables]</span>
+  Default DROP, allowlist API IPs
+     |
+<span class="hlo">[Redis / PG queue]</span> &rarr; cron &rarr; Slack
+<span class="hl">[Prometheus]</span> textfile &rarr; Grafana</div>
+    </div>
+  </div>
+
+  <h3>Deployment Priorities</h3>
+  <table>
+    <thead>
+      <tr><th>Priority</th><th>Layer</th><th>Why First</th><th>Effort</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-red">P0</span></td>
+        <td>Guard Chain + Trust Tiers</td>
+        <td>Prevents prompt injection and unauthorized access &mdash; the two most likely attack vectors on any deployment.</td>
+        <td>~2 days</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-red">P0</span></td>
+        <td>Container / Process Hardening</td>
+        <td>Limits blast radius. Every platform has native primitives (ECS task def, GKE securityContext, systemd sandbox).</td>
+        <td>~1 day</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">P1</span></td>
+        <td>Egress Enforcement</td>
+        <td>Prevents data exfiltration. Use your platform's network primitives (SG, firewall rules, nftables).</td>
+        <td>~2 days</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-orange">P1</span></td>
+        <td>Approval Queue</td>
+        <td>Prevents catastrophic actions. Use your existing queue infra (SQS, Pub/Sub, Redis).</td>
+        <td>~2 days</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-blue">P2</span></td>
+        <td>Web Content Guard</td>
+        <td>Only needed if agent fetches external URLs. Plugin code works as-is.</td>
+        <td>~1 day</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-blue">P2</span></td>
+        <td>Monitoring + Alerting</td>
+        <td>Visibility. The 28 metrics and 21 alert rules are portable &mdash; adapt to your stack (Datadog, Prometheus, CloudWatch).</td>
+        <td>~1 day</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-purple">P3</span></td>
+        <td>Session Analysis + Loop Breaker</td>
+        <td>Behavioral detection. Lower priority &mdash; structural controls handle most cases.</td>
+        <td>~1 day</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Common Use Cases</h3>
+  <div class="card-grid">
+    <div class="card">
+      <h4>Infra / Security</h4>
+      <p>Agent assists with incident response, IaC plan review, security finding analysis, audit trail investigation. <strong>Key controls:</strong> Trust tiers (SRE = owner), action quotas on destructive ops, approval queue for production changes.</p>
+    </div>
+    <div class="card">
+      <h4>Observability & Debugging</h4>
+      <p>Agent queries dashboards/metrics, analyzes logs, correlates failures across services. <strong>Key controls:</strong> Read-only tool access for most users. Egress limited to internal monitoring endpoints.</p>
+    </div>
+    <div class="card">
+      <h4>Development</h4>
+      <p>Agent assists with code review, PR creation, test execution, documentation. <strong>Key controls:</strong> Sandbox (can't reach production databases), web content guard (fetching external docs), trust tiers (team = known, CI = restricted).</p>
+    </div>
+    <div class="card">
+      <h4>On-Call / Runbook Automation</h4>
+      <p>Agent executes predefined runbooks, restarts services, scales resources. <strong>Key controls:</strong> Owner-only tier, approval queue for every action, full audit trail via guard.log, loop breaker prevents runaway automation.</p>
+    </div>
+  </div>
+
+  <h3>Integration with Existing Security Tools</h3>
+  <div class="card">
+    <p>Agent defense layers <em>complement</em> your existing security stack &mdash; they operate at a layer (semantic intent) that traditional tools cannot see:</p>
+    <table style="font-size:0.9em">
+      <tr><th>Your Existing Tool</th><th>Protects</th><th>Agent Layer Adds</th></tr>
+      <tr><td>Cloud threat detection (GuardDuty, SCC, Falco)</td><td>Infrastructure anomalies</td><td>Guard chain catches prompt-level attacks at the semantic layer</td></tr>
+      <tr><td>WAF / API Gateway</td><td>HTTP-level attacks</td><td>Guard chain analyzes intent, not just payload patterns</td></tr>
+      <tr><td>Audit logs (CloudTrail, GCP Audit, auditd)</td><td>API/system call audit</td><td>Guard.log provides agent-level audit (what was attempted, why blocked)</td></tr>
+      <tr><td>Secret managers (Vault, AWS SM, GCP SM)</td><td>Credential storage</td><td>Sidecar proxy ensures credentials never enter the agent's context</td></tr>
+      <tr><td>Monitoring (Datadog, Prometheus, CloudWatch)</td><td>Infrastructure metrics</td><td>Agent-specific metrics (guard latency, block rate, tier breaches)</td></tr>
+      <tr><td>SIEM / log aggregation</td><td>Correlation & alerting</td><td>Guard.log is JSON-lines, PII-safe, ready to ship to any SIEM</td></tr>
+    </table>
+  </div>
+
+  <h3>Cost Estimates</h3>
+  <div class="card">
+    <table style="font-size:0.9em">
+      <tr><th>Component</th><th>Solo (reference)</th><th>Startup (low volume)</th><th>Growth (high volume)</th></tr>
+      <tr><td>Lakera Guard</td><td>Free (10K/mo)</td><td>$50/mo (100K calls)</td><td>$200/mo (1M calls)</td></tr>
+      <tr><td>Prompt Guard 2 (local)</td><td>Free (CPU)</td><td>~$30/mo (1 vCPU sidecar)</td><td>~$30/mo (same)</td></tr>
+      <tr><td>GPT-4o-mini fallback</td><td>~$0.01/mo</td><td>~$1/mo</td><td>~$5/mo</td></tr>
+      <tr><td>Agent compute</td><td>Free (existing host)</td><td>~$30-60/mo (Fargate/Cloud Run)</td><td>~$100-200/mo</td></tr>
+      <tr><td>Queue + notifications</td><td>Free (file-based)</td><td>~$1/mo (SQS/Pub/Sub)</td><td>~$5/mo</td></tr>
+      <tr><td><strong>Total incremental</strong></td><td><strong>~$0.04/mo</strong></td><td><strong>~$80-140/mo</strong></td><td><strong>~$240-440/mo</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="highlight-box ok" style="margin-top: 24px;">
+    <strong>Bottom Line:</strong> The entire defense architecture is ~3,500 lines of config + one TypeScript plugin. The reference implementation runs on a 2017 laptop for $0.04/month. The hard part isn't the technology &mdash; it's the integration testing. Budget time for emergent failures at layer boundaries (see Section 11). Every defense layer uses platform-native primitives &mdash; no vendor lock-in beyond Lakera (which has a local fallback).
+  </div>
+</div>
+
+<!-- ======================================= -->
+<!-- SLIDE 15: APPENDIX -->
+<!-- ======================================= -->
+<div class="slide" id="appendix">
+  <h2>Appendix: Quick Reference</h2>
+
+  <div class="two-col">
+    <div>
+      <h3>Secrets Management</h3>
+      <div class="card">
+        <p>All secrets managed via <strong>agenix</strong> (NixOS declarative secrets).</p>
+        <ul style="font-size:0.9em">
+          <li><code>LAKERA_API_KEY</code> &mdash; Guard v2 auth</li>
+          <li><code>OPENROUTER_API_KEY</code> &mdash; GPT-4o-mini fallback</li>
+          <li><code>OWNER_PHONES</code> &mdash; E.164 numbers for notifications</li>
+          <li><code>OWNER_PIN</code> &mdash; Identity elevation</li>
+          <li><code>BRAVE_SEARCH_API_KEY</code> &mdash; Search fallback</li>
+        </ul>
+        <p style="font-size:0.9em; margin-top:8px">Decrypted at deploy time to <code>/etc/openclawd/env</code> (0440). Auto-restarted on changes via <code>restartTriggers</code>.</p>
+      </div>
+
+      <h3>Guard Test Suite</h3>
+      <div class="card">
+        <p><strong>55 test vectors</strong> covering:</p>
+        <ul style="font-size:0.9em">
+          <li>Direct prompt injection</li>
+          <li>System prompt override attempts</li>
+          <li>Credential patterns (all regex-matched types)</li>
+          <li>Legitimate content (false positive checks)</li>
+          <li>Multilingual injection attempts</li>
+        </ul>
+        <p style="font-size:0.9em"><code>./deploy.sh openclawd guard-test</code></p>
+      </div>
+    </div>
+    <div>
+      <h3>Operational Commands</h3>
+      <div class="card">
+        <table style="font-size:0.85em">
+          <tr><td><code>./deploy.sh openclawd status</code></td><td>Check security posture</td></tr>
+          <tr><td><code>./deploy.sh openclawd guard-test</code></td><td>Run 55-vector test suite</td></tr>
+          <tr><td><code>./deploy.sh openclawd guard-status</code></td><td>Guard health + credit alerts</td></tr>
+          <tr><td><code>sudo openclaw-lock</code></td><td>Lock identity files</td></tr>
+          <tr><td><code>sudo openclaw-unlock</code></td><td>Unlock for editing</td></tr>
+          <tr><td><code>sudo openclaw-approve</code></td><td>List/resolve pending approvals</td></tr>
+          <tr><td><code>sudo openclaw-save-canonical</code></td><td>Backup golden copy</td></tr>
+          <tr><td><code>sudo openclaw-restore-canonical</code></td><td>Incident response restore</td></tr>
+        </table>
+      </div>
+
+      <h3>Paper & Further Reading</h3>
+      <div class="card">
+        <p style="font-size:0.9em">This architecture is documented in an ongoing experience report:</p>
+        <ul style="font-size:0.9em">
+          <li><strong>Paper draft:</strong> <code>docs/paper-draft.md</code></li>
+          <li><strong>Outline:</strong> <code>docs/PAPER-OUTLINE.md</code></li>
+          <li><strong>Lessons:</strong> <code>LESSONS-OPENCLAW.md</code></li>
+        </ul>
+        <p style="font-size:0.85em; color:var(--text-muted); margin-top:8px">
+          References: Agents of Chaos (arXiv:2602.20021), CaMeL (arXiv:2503.18813), Silent Egress (arXiv:2602.22450), PCAS (arXiv:2602.16708), AgentSys (arXiv:2602.07398)
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; padding: 40px; color: var(--text-muted); font-size:0.9em; border-top: 1px solid var(--border);">
+  OpenClaw Security Architecture &middot; Reference Deployment Guide &middot; March 2026
+</div>
+
+<script>
+(function() {
+  var btn = document.getElementById('theme-toggle');
+  var root = document.documentElement;
+  var stored = localStorage.getItem('theme');
+  if (stored) root.setAttribute('data-theme', stored);
+  function icon() {
+    var t = root.getAttribute('data-theme');
+    var isDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    btn.textContent = isDark ? '\u2600\uFE0F' : '\uD83C\uDF19';
+    btn.title = isDark ? 'Switch to light theme' : 'Switch to dark theme';
+  }
+  icon();
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', icon);
+  btn.addEventListener('click', function() {
+    var t = root.getAttribute('data-theme');
+    var isDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = isDark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    icon();
+  });
+})();
+</script>
+</body>
+</html>

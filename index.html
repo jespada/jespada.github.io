@@ -1,3 +1,180 @@
-<meta name="color-scheme" content="dark light">
-<a href="https://xkcd.com/1386/">The Majority of people have more than the average number of legs!</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jorge Espada</title>
+<meta name="description" content="Infrastructure, Security, Bitcoin">
+<meta property="og:title" content="Jorge Espada">
+<meta property="og:description" content="Infrastructure, Security, Bitcoin">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jespada.dev">
+<style>
+  :root, [data-theme="dark"] {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+  }
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --surface: #f6f8fa;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --text-muted: #656d76;
+    --accent: #0969da;
+    --accent2: #8250df;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #ffffff;
+      --surface: #f6f8fa;
+      --border: #d0d7de;
+      --text: #1f2328;
+      --text-muted: #656d76;
+      --accent: #0969da;
+      --accent2: #8250df;
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+  }
+  .container {
+    max-width: 600px;
+    width: 100%;
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+  }
+  .tagline {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 40px;
+  }
+  .section-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section { margin-bottom: 32px; }
+  .research-item {
+    display: block;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.15s;
+  }
+  .research-item:hover { border-color: var(--accent); }
+  .research-item .title {
+    font-weight: 500;
+    color: var(--accent);
+    font-size: 0.95rem;
+  }
+  .research-item .meta {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .links {
+    list-style: none;
+  }
+  .links li {
+    padding: 6px 0;
+  }
+  .links a {
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .links a:hover { text-decoration: underline; }
+  .links .label {
+    display: inline-block;
+    width: 90px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .theme-toggle {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-family: inherit;
+  }
+  .theme-toggle:hover { color: var(--text); border-color: var(--accent); }
+</style>
+</head>
+<body>
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">light/dark</button>
+<div class="container">
+  <h1>Jorge Espada</h1>
+  <p class="tagline">Infrastructure, Security, Bitcoin</p>
 
+  <div class="section">
+    <div class="section-title">Research</div>
+    <a class="research-item" href="/research/agents-of-chaos-defense/">
+      <div class="title">Hardening LLM Agents Against the Agents of Chaos</div>
+      <div class="meta">Working paper &mdash; Early draft, March 2026</div>
+    </a>
+    <a class="research-item" href="/research/openclaw-security-architecture/generic.html">
+      <div class="title">OpenClaw Security Architecture &mdash; Deployment Guide</div>
+      <div class="meta">Presentation slides</div>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Links</div>
+    <ul class="links">
+      <li><span class="label">CV</span><a href="https://cv.jespada.dev/">cv.jespada.dev</a></li>
+      <li><span class="label">GitHub</span><a href="https://github.com/jespada">github.com/jespada</a></li>
+      <li><span class="label">Nostr</span><a href="https://njump.me/jespada@jespada.dev">jespada@jespada.dev</a></li>
+      <li><span class="label">Lightning</span><a href="lightning:jespada@jespada.dev">jespada@jespada.dev</a></li>
+      <li><span class="label">Keybase</span><a href="https://keybase.io/jespada">keybase.io/jespada</a></li>
+    </ul>
+  </div>
+</div>
+<script>
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'light' ? 'dark' : (current === 'dark' ? 'light' :
+    (window.matchMedia('(prefers-color-scheme: light)').matches ? 'dark' : 'light'));
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+})();
+</script>
+</body>
+</html>
