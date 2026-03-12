@@ -516,7 +516,7 @@
   <li>nftables counters feed <code>openclaw_vm_egress_denied_packets_total</code> into Prometheus for alerting.</li>
 </ul>
 
-<p><strong>API credential isolation</strong> (CS11, CS3). An API sidecar proxy (Node.js, <code>127.0.0.1:19090</code>) handles Gmail OAuth2 token refresh. The agent's API calls transit the proxy, which injects credentials from a file the agent process cannot read. Credentials never enter the agent's context window.</p>
+<p><strong>API credential isolation</strong> (CS11, CS3). An API sidecar proxy (Node.js, <code>127.0.0.1:19090</code>) handles Gmail OAuth2 token refresh and Grafana Cloud queries (read-only Viewer SA). The agent's API calls transit the proxy, which injects credentials server-side. Credentials never enter the agent's LLM context window — the agent only sees structured JSON responses.</p>
 
 <h3>3.3 Phase C: Behavioral Controls</h3>
 
