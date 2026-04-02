@@ -746,7 +746,7 @@
     <div class="card">
       <h4>Seccomp & Network</h4>
       <ul style="font-size:0.9em">
-        <li><code>SystemCallFilter = @system-service ~@mount ~@reboot ~@debug ~@raw-io + pkey_alloc/free/mprotect</code></li>
+        <li><code>SystemCallFilter = @system-service ~@mount ~@reboot ~@debug ~@raw-io + pkey_alloc/free/mprotect + mincore</code> (crashpad disabled via <code>--disable-crash-reporter</code>)</li>
         <li><code>ProcSubset = all</code> (Chromium needs <code>/proc/sys/fs/inotify</code>; <code>ProtectKernelTunables</code> keeps it read-only)</li>
         <li><code>RestrictAddressFamilies = AF_INET AF_INET6 AF_UNIX AF_NETLINK</code></li>
         <li><code>SystemCallArchitectures = native</code></li>
